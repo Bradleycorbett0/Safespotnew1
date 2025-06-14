@@ -1,0 +1,39 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main  # or your main development branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y zip unzip git python3-pip build-essential \
+            libssl-dev libffi-dev libz-dev zlib1g-dev libncurses5 libsqlite3-dev \
+            libjpeg-dev libandroid-sdk python3-setuptools ccache liblzma-dev
+          pip install --upgrade pip
+          pip install buildozer cython
+
+      - name: Build APK
+        run: |
+          sudo apt install -y openjdk-17-jdk
+          buildozer android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: safespot-debug-apk
+          path: bin/*.apk
