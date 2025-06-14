@@ -22,17 +22,21 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y zip unzip git python3-pip build-essential \
-            libssl-dev libffi-dev zlib1g-dev libjpeg-dev openjdk-17-jdk ccache liblzma-dev
+            libssl-dev libffi-dev zlib1g-dev libjpeg-dev openjdk-17-jdk \
+            liblzma-dev ccache
           pip install --upgrade pip
           pip install cython
           pip install buildozer
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Accept Android SDK Licenses
         run: yes | sdkmanager --licenses
 
       - name: Install Android SDK Build Tools
         run: |
-          yes | sdkmanager "build-tools;33.0.2" "platforms;android-33"
+          sdkmanager "build-tools;33.0.2" "platforms;android-33"
 
       - name: Build APK
         run: |
