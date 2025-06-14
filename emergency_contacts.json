@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Emergency Services (999)",
+    "phone": "999"
+  },
+  {
+    "name": "NHS (111)",
+    "phone": "111"
+  },
+  {
+    "name": "Samaritans",
+    "phone": "116123"
+  },
+  {
+    "name": "Andy's Man Club",
+    "phone": "https://andysmanclub.co.uk"
+  },
+  {
+    "name": "NHS Website",
+    "phone": "https://www.nhs.uk"
+  },
+  {
+    "name": "NHS Mental Health",
+    "phone": "https://www.nhs.uk/mental-health/"
+  }
+]
