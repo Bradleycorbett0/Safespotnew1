@@ -2,57 +2,68 @@ name: Build APK with Buildozer
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk wget libtinfo6 libncurses6 || true
-          python -m pip install --upgrade pip
-          pip install buildozer cython
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y zip unzip git python3-pip build-essential \
+          libssl-dev libffi-dev libsqlite3-dev libbz2-dev libreadline-dev \
+          libncursesw5 libncursesw5-dev libtinfo5 zlib1g-dev curl openjdk-17-jdk
 
-      - name: Set up Android SDK manually
-        run: |
-          mkdir -p "$HOME/android-sdk/cmdline-tools"
-          cd "$HOME/android-sdk/cmdline-tools"
-          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
-          unzip tools.zip
-          mv cmdline-tools latest
-          mkdir -p $HOME/.android
-          echo '### User Sources for Android SDK Manager' > $HOME/.android/repositories.cfg
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=${HOME}/android-sdk "platform-tools" "platforms;android-31" "build-tools;36.0.0"
+    - name: Install Buildozer and Cython
+      run: |
+        pip install --upgrade pip
+        pip install Cython
+        pip install buildozer
 
-      - name: Accept Android SDK Licenses
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+    - name: Set up Android SDK manually
+      run: |
+        mkdir -p "$HOME/android-sdk/cmdline-tools"
+        cd "$HOME/android-sdk/cmdline-tools"
+        curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip tools.zip
+        mv cmdline-tools latest
+        yes | sdkmanager --sdk_root=${HOME}/android-sdk --licenses || true
+        sdkmanager --sdk_root=${HOME}/android-sdk \
+          "platform-tools" "platforms;android-33" \
+          "build-tools;33.0.2" "emulator" "cmdline-tools;latest"
 
-      - name: Set environment variables
-        run: |
-          echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+    - name: Accept Android SDK Licenses
+      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Initialize Buildozer
-        run: buildozer init
+    - name: Set environment variables
+      run: |
+        echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
 
-      - name: Build APK
-        run: buildozer android debug
+    - name: Initialize Buildozer (if missing)
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: safespot-debug-apk
-          path: bin/*.apk
+    - name: Build APK
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: safespot-apk
+        path: bin/*.apk
