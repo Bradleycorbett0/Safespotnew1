@@ -40,13 +40,18 @@ jobs:
         pip install --upgrade pip
         pip install buildozer cython
 
-    - name: Set up Android SDK
+    - name: Accept Android SDK Licenses
       run: |
         mkdir -p ~/.buildozer
         echo "[buildozer]" > ~/.buildozer/global.json
         echo "android.accept_sdk_license = True" >> ~/.buildozer/global.json
 
-    - name: Initialize Buildozer if missing
+    - name: Patch buildozer.spec (force working SDK/API version)
+      run: |
+        sed -i 's/^android.api =.*/android.api = 30/' buildozer.spec || echo "android.api = 30" >> buildozer.spec
+        sed -i 's/^android.build_tools =.*/android.build_tools = 30.0.3/' buildozer.spec || echo "android.build_tools = 30.0.3" >> buildozer.spec
+
+    - name: Initialize Buildozer (if needed)
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
 
@@ -56,5 +61,5 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: KivyApp-APK
+        name: MyApp-APK
         path: bin/*.apk
