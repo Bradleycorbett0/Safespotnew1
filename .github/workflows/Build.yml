@@ -30,27 +30,20 @@ jobs:
 
     - name: Set up Android SDK
       run: |
-        mkdir -p ~/.buildozer/android/platform
-        yes | sdkmanager --licenses || true
-      env:
-        JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-
-    - name: Accept Android SDK Licenses and Install Build Tools
-      run: |
+        mkdir -p ~/.android/cmdline-tools
         wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
-        mkdir -p ~/.android/cmdline-tools
         mv cmdline-tools ~/.android/cmdline-tools/tools
-        yes | ~/.android/cmdline-tools/tools/bin/sdkmanager --sdk_root=${HOME}/.android "platform-tools" "platforms;android-31" "build-tools;33.0.2" "cmdline-tools;latest"
+        yes | ~/.android/cmdline-tools/tools/bin/sdkmanager --sdk_root=${HOME}/.android \
+          "platform-tools" "platforms;android-31" "build-tools;33.0.2" "cmdline-tools;latest"
         yes | ~/.android/cmdline-tools/tools/bin/sdkmanager --licenses
         export PATH=$HOME/.android/cmdline-tools/tools/bin:$PATH
 
     - name: Build APK
-      run: |
-        buildozer android debug
+      run: buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: my-app-release
         path: bin/*.apk
