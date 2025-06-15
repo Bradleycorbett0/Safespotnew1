@@ -2,9 +2,9 @@ name: Build APK with Buildozer
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
@@ -17,19 +17,19 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.10"
+        python-version: "3.11"
 
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt install -y zip unzip git python3-pip build-essential \
           libssl-dev libffi-dev libsqlite3-dev libbz2-dev libreadline-dev \
-          libncursesw5 libncursesw5-dev libtinfo5 zlib1g-dev curl openjdk-17-jdk
+          libncurses-dev zlib1g-dev curl openjdk-17-jdk
 
     - name: Install Buildozer and Cython
       run: |
-        pip install --upgrade pip
-        pip install Cython
+        python3 -m pip install --upgrade pip
+        pip install cython
         pip install buildozer
 
     - name: Set up Android SDK manually
@@ -39,18 +39,21 @@ jobs:
         curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
         unzip tools.zip
         mv cmdline-tools latest
-        yes | sdkmanager --sdk_root=${HOME}/android-sdk --licenses || true
-        sdkmanager --sdk_root=${HOME}/android-sdk \
-          "platform-tools" "platforms;android-33" \
-          "build-tools;33.0.2" "emulator" "cmdline-tools;latest"
+        export ANDROID_HOME=$HOME/android-sdk
+        export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+        yes | sdkmanager --licenses
 
     - name: Accept Android SDK Licenses
-      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+      run: yes | sdkmanager --licenses
+
+    - name: Install Android SDK Build Tools and platform-tools
+      run: |
+        sdkmanager "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
     - name: Set environment variables
       run: |
         echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:$HOME/.local/bin" >> $GITHUB_ENV
+        echo "PATH=$HOME/android-sdk/platform-tools:$PATH" >> $GITHUB_ENV
 
     - name: Initialize Buildozer (if missing)
       run: |
@@ -65,5 +68,5 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: safespot-apk
+        name: safe-spot-apk
         path: bin/*.apk
