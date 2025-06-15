@@ -2,8 +2,7 @@ name: Build APK with Buildozer
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
 
 jobs:
@@ -23,8 +22,8 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y \
-            libtinfo5 \
-            libncurses5 \
+            libtinfo6 \
+            libncurses6 \
             zip \
             unzip \
             openjdk-11-jdk \
