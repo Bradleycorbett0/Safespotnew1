@@ -1,59 +1,52 @@
-name: Build APK with Buildozer
+name: Build APK
 
 on:
   push:
     branches:
       - main
-  pull_request:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout repository
+    - name: Checkout code
       uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
-          zip unzip openjdk-17-jdk python3-pip \
-          libncurses5 libtinfo5 libstdc++6
+          build-essential \
+          ccache \
+          git \
+          zip \
+          unzip \
+          openjdk-17-jdk \
+          libncurses5 \
+          libtinfo5 \
+          libffi-dev \
+          libssl-dev \
+          python3-pip \
+          python3-setuptools
 
     - name: Install Buildozer and Cython
       run: |
-        pip install --upgrade pip setuptools cython
-        pip install buildozer
+        pip install --upgrade pip
+        pip install buildozer cython
 
-    - name: Set up Android SDK manually
+    - name: Set up Android SDK
       run: |
-        mkdir -p "$HOME/android-sdk/cmdline-tools"
-        cd "$HOME/android-sdk/cmdline-tools"
-        curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-        unzip tools.zip
-        mv cmdline-tools latest
+        mkdir -p ~/.buildozer
+        echo "[buildozer]" > ~/.buildozer/global.json
+        echo "android.accept_sdk_license = True" >> ~/.buildozer/global.json
 
-    - name: Accept Android SDK Licenses
-      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true
-
-    - name: Install Android SDK Build Tools and platform-tools
-      run: |
-        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-          "platform-tools" "platforms;android-31" "build-tools;36.0.0" "emulator"
-
-    - name: Set environment variables
-      run: |
-        echo "PATH=$HOME/.local/bin:$PATH" >> $GITHUB_ENV
-        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/android-sdk/emulator:$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
-
-    - name: Initialize Buildozer (if missing)
+    - name: Initialize Buildozer if missing
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
 
@@ -63,5 +56,5 @@ jobs:
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-debug.apk
+        name: KivyApp-APK
         path: bin/*.apk
