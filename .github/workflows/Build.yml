@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
@@ -46,12 +46,12 @@ jobs:
         echo "[buildozer]" > ~/.buildozer/global.json
         echo "android.accept_sdk_license = True" >> ~/.buildozer/global.json
 
-    - name: Patch buildozer.spec (force working SDK/API version)
+    - name: Force working Android SDK & Build Tools
       run: |
         sed -i 's/^android.api =.*/android.api = 30/' buildozer.spec || echo "android.api = 30" >> buildozer.spec
         sed -i 's/^android.build_tools =.*/android.build_tools = 30.0.3/' buildozer.spec || echo "android.build_tools = 30.0.3" >> buildozer.spec
 
-    - name: Initialize Buildozer (if needed)
+    - name: Initialize Buildozer if missing
       run: |
         if [ ! -f buildozer.spec ]; then buildozer init; fi
 
