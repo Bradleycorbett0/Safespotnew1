@@ -21,21 +21,28 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk libncurses6 libstdc++6
+          sudo apt-get update
+          sudo apt-get install -y zip unzip openjdk-17-jdk libncurses6 libstdc++6
           pip install --upgrade pip
           pip install cython buildozer
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept licenses and install required SDK components
+      - name: Install Android SDK manually
         run: |
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          mkdir -p "$HOME/android-sdk/cmdline-tools"
+          cd "$HOME/android-sdk/cmdline-tools"
+          wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip
+          unzip tools.zip
+          mv cmdline-tools latest
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/latest/bin:$PATH
+          yes | $ANDROID_SDK_ROOT/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          $ANDROID_SDK_ROOT/latest/bin/sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Build APK with Buildozer
-        run: buildozer android debug
+      - name: Build APK
+        run: |
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/33.0.2:$PATH
+          buildozer android debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
