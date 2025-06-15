@@ -11,60 +11,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools \
-                              libssl-dev libffi-dev libncurses5 libncurses5-dev libtinfo5
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y zip unzip openjdk-17-jdk python3-pip python3-setuptools \
+          libssl-dev libffi-dev libncurses-dev libtinfo-dev
 
-      - name: Install Buildozer and Cython
-        run: |
-          python3 -m pip install --upgrade pip
-          pip install cython buildozer
+    - name: Install Buildozer and Cython
+      run: |
+        python3 -m pip install --upgrade pip
+        pip install --user buildozer cython
 
-      - name: Install Android SDK manually
-        run: |
-          mkdir -p "$HOME/android-sdk/cmdline-tools"
-          cd "$HOME/android-sdk/cmdline-tools"
-          curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip tools.zip -d cmdline-tools
-          mv cmdline-tools cmdline-tools-temp
-          mkdir -p cmdline-tools/latest
-          mv cmdline-tools-temp/* cmdline-tools/latest/
-          rm tools.zip
+    - name: Set up Android SDK manually
+      run: |
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        cd $HOME/android-sdk/cmdline-tools
+        curl -o tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip tools.zip
+        mv cmdline-tools latest
 
-      - name: Accept Android SDK Licenses
-        run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
+    - name: Accept Android SDK Licenses
+      run: yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --licenses
 
-      - name: Install Android SDK Build Tools and platform-tools
-        run: |
-          $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
-            "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+    - name: Install Android SDK Build Tools and platform-tools
+      run: |
+        $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          "platform-tools" "platforms;android-31" "build-tools;36.0.0"
 
-      - name: Set environment variables
-        run: |
-          echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "PATH=$PATH:$HOME/android-sdk/platform-tools" >> $GITHUB_ENV
+    - name: Set environment variables
+      run: |
+        echo "ANDROIDSDK=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
 
-      - name: Initialize Buildozer (if missing)
-        run: |
-          if [ ! -f buildozer.spec ]; then
-            buildozer init
-          fi
+    - name: Initialize Buildozer (if missing)
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
 
-      - name: Build APK
-        run: buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug.apk
-          path: bin/*.apk
+    - name: Build APK
+      run: |
+        buildozer android debug
