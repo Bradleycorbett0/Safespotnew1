@@ -4,47 +4,42 @@ on:
   push:
     branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: 3.10
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zip unzip openjdk-17-jdk wget libncurses6 libstdc++6 python3-pip
-          pip install --upgrade pip
-          pip install buildozer cython virtualenv
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libncurses6 libstdc++6 zip unzip openjdk-17-jdk wget curl
+        python -m pip install --upgrade pip
+        pip install buildozer cython
 
-      - name: Set up Android SDK and accept licenses
-        run: |
-          sudo mkdir -p /opt/android-sdk/cmdline-tools
-          cd /opt/android-sdk/cmdline-tools
-          sudo wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip
-          sudo unzip cmdline-tools.zip
-          sudo mv cmdline-tools latest
-          export ANDROID_HOME=/opt/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH
-          yes | sdkmanager --licenses
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
+    - name: Set up Android SDK
+      uses: android-actions/setup-android@v3
 
-      - name: Build with Buildozer
-        run: |
-          export ANDROID_HOME=/opt/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          buildozer android debug
+    - name: Accept licenses and install Build Tools
+      run: |
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: safespot-apk
-          path: bin/*.apk
+    - name: Build APK
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: safespot-debug-apk
+        path: bin/*.apk
