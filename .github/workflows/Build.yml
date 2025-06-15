@@ -22,17 +22,17 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libncurses6 libstdc++6 zip unzip openjdk-17-jdk wget curl
+        sudo apt-get install -y zip unzip openjdk-17-jdk libncurses6 libstdc++6
         pip install --upgrade pip
-        pip install buildozer cython
+        pip install cython buildozer
 
     - name: Set up Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Accept licenses and install build tools
+    - name: Accept licenses and install SDK packages
       run: |
-        echo "yes" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
-        $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+        yes | sdkmanager --licenses
+        sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
     - name: Build APK
       run: |
