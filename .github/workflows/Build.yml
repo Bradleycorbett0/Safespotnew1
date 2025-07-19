@@ -7,58 +7,32 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.10'
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            ccache \
-            git \
-            zip unzip \
-            openjdk-17-jdk \
-            libncurses5 \
-            libtinfo5 \
-            libffi-dev \
-            libssl-dev \
-            python3-pip \
-            python3-setuptools
-
-      - name: Install Buildozer and Cython
+      - name: Install dependencies
         run: |
           pip install --upgrade pip
           pip install buildozer cython
 
-      - name: Accept Android SDK Licenses
+      - name: Install Android SDK and Accept Licenses
         run: |
-          mkdir -p ~/.buildozer
-          echo "[buildozer]" > ~/.buildozer/global.json
-          echo "android.accept_sdk_license = True" >> ~/.buildozer/global.json
-
-      - name: Set Buildozer API and Build Tools versions
-        run: |
-          sed -i 's/^android.api =.*/android.api = 30/' buildozer.spec || echo "android.api = 30" >> buildozer.spec
-          sed -i 's/^android.build_tools =.*/android.build_tools = 30.0.3/' buildozer.spec || echo "android.build_tools = 30.0.3" >> buildozer.spec
-
-      - name: Initialize Buildozer (if missing)
-        run: |
-          if [ ! -f buildozer.spec ]; then buildozer init; fi
+          sudo apt update
+          sudo apt install -y zip unzip openjdk-11-jdk wget
+          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
+          cd ~/.buildozer/android/platform/android-sdk
+          wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d cmdline-tools
+          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=. --licenses
+          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=. "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Build APK
         run: buildozer android debug
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: MyApp-APK
-          path: bin/*.apk
