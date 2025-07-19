@@ -27,12 +27,19 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y zip unzip openjdk-11-jdk wget
-          mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
+
+          mkdir -p ~/.buildozer/android/platform/android-sdk
           cd ~/.buildozer/android/platform/android-sdk
+
           wget https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
-          unzip -q cmdline-tools.zip -d cmdline-tools
-          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=. --licenses
-          yes | cmdline-tools/cmdline-tools/bin/sdkmanager --sdk_root=. "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+          unzip -q cmdline-tools.zip
+
+          # Create correct sdkmanager path expected by Buildozer
+          mkdir -p tools/bin
+          mv cmdline-tools/* tools/
+
+          yes | tools/bin/sdkmanager --sdk_root=. --licenses
+          yes | tools/bin/sdkmanager --sdk_root=. "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
 
       - name: Build APK
         run: buildozer android debug
