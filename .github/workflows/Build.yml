@@ -33,17 +33,28 @@ jobs:
         python -m pip install --upgrade pip
         pip install --upgrade Cython buildozer python-for-android
 
-    - name: Pin NDK version (r25b)
+    - name: Install Android NDK (r25b)
       run: |
-        ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-        ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-ndk-r25b
-        mkdir -p $ANDROID_SDK_ROOT
+        mkdir -p $HOME/.buildozer/android/platform
         wget https://dl.google.com/android/repository/android-ndk-r25b-linux.zip
         unzip -q android-ndk-r25b-linux.zip -d $HOME/.buildozer/android/platform
         rm android-ndk-r25b-linux.zip
 
+    - name: Install Android SDK + Platform Tools
+      run: |
+        mkdir -p $HOME/.buildozer/android/platform
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+        unzip -q commandlinetools-linux-11076708_latest.zip -d $HOME/.buildozer/android/platform
+        rm commandlinetools-linux-11076708_latest.zip
+        mkdir -p $HOME/.buildozer/android/platform/android-sdk/cmdline-tools
+        mv $HOME/.buildozer/android/platform/cmdline-tools $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest
+        yes | $HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.buildozer/android/platform/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+
     - name: Build APK
       run: |
+        export ANDROIDSDK=$HOME/.buildozer/android/platform/android-sdk
+        export ANDROIDNDK=$HOME/.buildozer/android/platform/android-ndk-r25b
+        export PATH=$ANDROIDSDK/platform-tools:$PATH
         buildozer -v android debug
 
     - name: Upload APK artifact
