@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Set up Python
@@ -25,16 +25,17 @@ jobs:
         pip install --upgrade pip
         pip install buildozer cython
 
-    - name: Install Android SDK command line tools
+    - name: Install Android SDK command-line tools
       run: |
         mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
         cd ~/.buildozer/android/platform/android-sdk/cmdline-tools
         curl -O https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
         unzip commandlinetools-linux-*.zip -d latest
 
-    - name: Install Android components
+    - name: Install Android SDK components
       run: |
         yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+          --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
           "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
 
     - name: Set environment variables
@@ -43,12 +44,13 @@ jobs:
         echo "ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-sdk/ndk/25.1.8937393" >> $GITHUB_ENV
         echo "$HOME/.local/bin:$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-    - name: Build APK
+    - name: Build APK with Buildozer
       run: |
         buildozer android debug
 
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
       with:
-        name: apk
+        name: built-apk
         path: bin/*.apk
+        if-no-files-found: error
