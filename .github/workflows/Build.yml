@@ -30,11 +30,13 @@ jobs:
         mkdir -p ~/.buildozer/android/platform/android-sdk/cmdline-tools
         cd ~/.buildozer/android/platform/android-sdk/cmdline-tools
         curl -O https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-        unzip commandlinetools-linux-*.zip -d latest
+        unzip commandlinetools-linux-*.zip
+        mkdir -p latest
+        mv cmdline-tools latest/
 
     - name: Install Android SDK components
       run: |
-        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin/sdkmanager \
+        yes | ~/.buildozer/android/platform/android-sdk/cmdline-tools/latest/cmdline-tools/bin/sdkmanager \
           --sdk_root=$HOME/.buildozer/android/platform/android-sdk \
           "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
 
@@ -42,7 +44,7 @@ jobs:
       run: |
         echo "ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk" >> $GITHUB_ENV
         echo "ANDROID_NDK_HOME=$HOME/.buildozer/android/platform/android-sdk/ndk/25.1.8937393" >> $GITHUB_ENV
-        echo "$HOME/.local/bin:$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin:$HOME/.buildozer/android/platform/android-sdk/platform-tools:$HOME/.buildozer/android/platform/android-sdk/cmdline-tools/latest/cmdline-tools/bin" >> $GITHUB_PATH
 
     - name: Build APK with Buildozer
       run: |
