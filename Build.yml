@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk python3-pip libncurses5
+        sudo apt install -y zip unzip openjdk-17-jdk python3-pip
         pip install --upgrade pip
         pip install buildozer cython
 
@@ -31,21 +31,35 @@ jobs:
         mkdir -p $HOME/.android/sdk/cmdline-tools
         cd $HOME/.android/sdk/cmdline-tools
         curl -O https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-        unzip commandlinetools-linux-*.zip -d latest
-        yes | $HOME/.android/sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/.android/sdk "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
+        unzip commandlinetools-linux-*.zip
+        mkdir -p latest
+        mv cmdline-tools latest/
+
+    - name: Install Android SDK components
+      run: |
+        yes | $HOME/.android/sdk/cmdline-tools/latest/cmdline-tools/bin/sdkmanager \
+          --sdk_root=$HOME/.android/sdk \
+          "platform-tools" "platforms;android-31" "build-tools;31.0.0" "ndk;25.1.8937393"
 
     - name: Set environment variables
       run: |
         echo "ANDROIDSDK=$HOME/.android/sdk" >> $GITHUB_ENV
         echo "ANDROID_NDK_HOME=$HOME/.android/sdk/ndk/25.1.8937393" >> $GITHUB_ENV
-        echo "PATH=$HOME/.local/bin:$HOME/.android/sdk/platform-tools:$HOME/.android/sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+        echo "$HOME/.local/bin:$HOME/.android/sdk/platform-tools:$HOME/.android/sdk/cmdline-tools/latest/cmdline-tools/bin" >> $GITHUB_PATH
+
+    - name: Workaround: symlink sdkmanager to expected path
+      run: |
+        mkdir -p ~/.buildozer/android/platform/android-sdk/tools/bin
+        ln -s $HOME/.android/sdk/cmdline-tools/latest/cmdline-tools/bin/sdkmanager \
+              ~/.buildozer/android/platform/android-sdk/tools/bin/sdkmanager
 
     - name: Build APK
       run: |
         buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: my-app-apk
         path: bin/*.apk
+        if-no-files-found: error
