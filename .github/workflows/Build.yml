@@ -10,26 +10,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
 
-    - name: Install dependencies
+    - name: Install system dependencies
       run: |
         sudo apt update
-        sudo apt install -y zip unzip openjdk-17-jdk python3-pip libncurses5 libstdc++6
+        sudo apt install -y zip unzip openjdk-17-jdk python3-pip libstdc++6
+
+    - name: Install Python dependencies
+      run: |
         pip install --upgrade pip
         pip install --user buildozer cython
 
     - name: Set environment variables
       run: |
         echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$PATH" >> $GITHUB_ENV
+        echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/.local/bin:$PATH" >> $GITHUB_ENV
 
-    - name: Download and set up Android command line tools
+    - name: Download and install Android SDK command-line tools
       run: |
         mkdir -p $HOME/android-sdk/cmdline-tools
         cd $HOME/android-sdk/cmdline-tools
@@ -37,7 +41,7 @@ jobs:
         unzip commandlinetools.zip -d latest
         rm commandlinetools.zip
 
-    - name: Accept Android SDK licenses and install platforms
+    - name: Accept licenses and install SDK packages
       run: |
         yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
