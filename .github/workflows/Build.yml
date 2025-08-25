@@ -31,6 +31,7 @@ jobs:
     - name: Set environment variables
       run: |
         echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$HOME/android-sdk/ndk-bundle" >> $GITHUB_ENV
         echo "PATH=$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/.local/bin:$PATH" >> $GITHUB_ENV
 
     - name: Download and install Android SDK command-line tools
@@ -49,7 +50,11 @@ jobs:
       run: |
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk --licenses <<< 'y'
         $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk \
-          "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+          "platform-tools" \
+          "platforms;android-31" \
+          "platforms;android-34" \
+          "build-tools;31.0.0" \
+          "build-tools;34.0.0"
 
     - name: Build APK
       run: |
